@@ -1,0 +1,8 @@
+name: Varo
+main: com.instancedev.varo.Main
+version: 1.0.0
+author: instancelabs
+commands:
+   varo:
+      description: Main command
+      usage: /varo
