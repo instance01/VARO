@@ -1,5 +1,7 @@
 package com.instancedev.varo;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -8,6 +10,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 public class Util {
+
+	public static void playBloodEffect(Player p) {
+		p.getWorld().playEffect(p.getLocation().add(0D, 1D, 0D), Effect.STEP_SOUND, 152);
+	}
 
 	public static void clearInv(Player p) {
 		p.getInventory().clear();
@@ -44,4 +50,11 @@ public class Util {
 		plugin.saveConfig();
 	}
 
+	public static Location getComponent(JavaPlugin plugin, String team) {
+		String base = "spawns." + team;
+		if (plugin.getConfig().isSet(base)) {
+			return new Location(Bukkit.getWorld(plugin.getConfig().getString(base + ".world")), plugin.getConfig().getDouble(base + ".location.x"), plugin.getConfig().getDouble(base + ".location.y"), plugin.getConfig().getDouble(base + ".location.z"), (float) plugin.getConfig().getDouble(base + ".location.yaw"), (float) plugin.getConfig().getDouble(base + ".location.pitch"));
+		}
+		return null;
+	}
 }
