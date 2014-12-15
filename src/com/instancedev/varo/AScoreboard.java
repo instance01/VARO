@@ -32,7 +32,7 @@ public class AScoreboard {
 		}
 
 		// ascore.get(p.getName()).resetScores(ChatColor.RED + m.v.getTimeFormatted(p));
-		aobjective.get(p.getName()).getScore(" - ").setScore(0);
+		aobjective.get(p.getName()).getScore(ChatColor.GRAY + " - ").setScore(0);
 
 		aobjective.get(p.getName()).setDisplayName(ChatColor.RED + m.v.getTimeFormatted(p));
 

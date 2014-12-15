@@ -120,8 +120,20 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
-		if (!v.isRegistered(event.getPlayer()) && !event.getPlayer().isOp()) {
+		if (event.getPlayer().isOp()) {
+			return;
+		}
+		if (!v.isRegistered(event.getPlayer())) {
 			event.disallow(Result.KICK_OTHER, Messages.not_registered.getMSG().replaceAll("<player>", event.getPlayer().getName()));
+		} else {
+			if (m.getConfig().isSet("players." + event.getPlayer().getName() + ".temp_banned")) {
+				long millis = m.getConfig().getLong("players." + event.getPlayer().getName() + ".temp_banned");
+				long delta = Util.millisBetween(millis);
+				System.out.println(delta);
+				if(delta > 0){
+					event.disallow(Result.KICK_OTHER, Messages.quota_drained.getMSG());
+				}
+			}
 		}
 	}
 

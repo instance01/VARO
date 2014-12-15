@@ -82,7 +82,12 @@ public class VARO {
 				}
 				if (secs >= 1200) {
 					p.kickPlayer(Messages.twenty_mins.getMSG());
-					// TODO tempban
+					if(!m.getConfig().isSet("players." + p.getName() + ".temp_do_ban")){
+						m.getConfig().set("players." + p.getName() + ".temp_do_ban", true);
+					} else {
+						m.getConfig().set("players." + p.getName() + ".temp_banned", Util.millisUntilMidnight());
+					}
+					m.saveConfig();
 					pcounter.remove(name);
 					ptask.get(name).cancel();
 				}

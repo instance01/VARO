@@ -1,5 +1,8 @@
 package com.instancedev.varo;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -57,4 +60,24 @@ public class Util {
 		}
 		return null;
 	}
+
+	public static long millisUntilMidnight() {
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.DAY_OF_MONTH, 1);
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+		return (c.getTimeInMillis() - System.currentTimeMillis());
+	}
+
+	public static long millisBetween(long i) {
+		Calendar cal_ = Calendar.getInstance();
+		cal_.setTimeInMillis(Long.valueOf(i));
+
+		long differenceMilliSeconds = cal_.getTime().getTime() - System.currentTimeMillis();
+		// long days = differenceMilliSeconds / 1000 / 60 / 60 / 24;
+		return differenceMilliSeconds;
+	}
+
 }

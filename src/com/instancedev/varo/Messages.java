@@ -10,7 +10,8 @@ public enum Messages {
 	thanks_for_playing ("&cYou failed. Thanks for playing!"),
 	not_registered("&cYou don't seem to be registered for VARO. &7If you want to join, reach out for an admin and tell him your name, &4<player>&7!"),
 	kicking_in("&cYou'll be kicked in &4<count> &cseconds!"),
-	twenty_mins("&cYour 20 minutes are gone, see you soon!");
+	twenty_mins("&cYour 20 minutes are gone, see you soon!"),
+	quota_drained("&cYour quota for today has drained, you can play tomorrow again! ^-^");
 
 	private String msg;
 
