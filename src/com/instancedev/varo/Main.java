@@ -1,5 +1,7 @@
 package com.instancedev.varo;
 
+import java.util.HashMap;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -17,6 +19,7 @@ import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -25,14 +28,26 @@ public class Main extends JavaPlugin implements Listener {
 	// This is a server-wide plugin and can only be used once each server
 
 	boolean started;
-	int countdown = 30;
-	BukkitTask task_temp = null;
 
 	Main m;
+	VARO v;
 
 	public void onEnable() {
 		m = this;
+		v = new VARO(this);
 		Bukkit.getPluginManager().registerEvents(this, this);
+
+		this.getConfig().addDefault("config.started", false);
+		// Example:
+		this.getConfig().addDefault("players.InstanceLabs.team", "Test");
+		this.getConfig().addDefault("players.InstanceLabs.temp_time", 0);
+		this.getConfig().addDefault("players.InstanceLabs.was_teleported", false);
+
+		this.getConfig().options().copyDefaults(true);
+		this.saveConfig();
+
+		this.started = this.getConfig().getBoolean("config.started");
+		
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -44,7 +59,7 @@ public class Main extends JavaPlugin implements Listener {
 				Player player = (Player) sender;
 				if (args.length > 0) {
 					if (args[0].equalsIgnoreCase("start")) {
-						startCountdown();
+						v.startCountdown();
 					} else if (args[0].equalsIgnoreCase("setspawn")) {
 						if (args.length > 1) {
 							String base = args[1] + "." + (getConfig().isSet("spawns." + args[1] + ".") ? 1 : 0);
@@ -52,48 +67,12 @@ public class Main extends JavaPlugin implements Listener {
 							sender.sendMessage(ChatColor.GREEN + "Saved spawn for: " + base);
 						}
 					} else if (args[0].equalsIgnoreCase("stop")) {
-						if (task_temp != null) {
-							task_temp.cancel();
-							for (Player p : Bukkit.getOnlinePlayers()) {
-								if (!p.isOp()) {
-									p.kickPlayer(Messages.varo_stopped.getMSG());
-								}
-							}
-						}
+						v.stop();
 					}
 				}
 			}
 		}
 		return true;
-	}
-
-	public void startCountdown() {
-		task_temp = Bukkit.getScheduler().runTaskTimer(this, new Runnable() {
-			public void run() {
-				if (countdown == 30 || countdown == 15 || countdown == 10 || countdown < 6) {
-					for (Player p : Bukkit.getOnlinePlayers()) {
-						p.sendMessage(Messages.starting_msg.getMSG().replaceAll("<count>", Integer.toString(countdown)));
-					}
-				}
-				countdown--;
-			}
-		}, 20L, 20L);
-	}
-
-	public void start() {
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			p.setHealth(20D);
-			p.setLevel(0);
-			p.setExp(0F);
-			Util.clearInv(p);
-			p.setFoodLevel(20);
-			p.setSaturation(2F);
-			if (p.getAllowFlight()) {
-				p.setFlying(false);
-			}
-			p.setGameMode(GameMode.SURVIVAL);
-		}
-		started = true;
 	}
 
 	@EventHandler
@@ -122,13 +101,8 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerJoinServer(final PlayerJoinEvent event) {
-		if (getConfig().isSet("players." + event.getPlayer().getName())) {
-			final String team = getConfig().getString("players." + event.getPlayer().getName());
-			Bukkit.getScheduler().runTaskLater(this, new Runnable() {
-				public void run() {
-					Util.teleportPlayerFixed(event.getPlayer(), Util.getComponent(m, team));
-				}
-			}, 40L);
+		if (v.isRegistered(event.getPlayer())) {
+			v.teleportToTeamSpawn(event.getPlayer());
 		} else {
 			Bukkit.broadcastMessage(event.getPlayer().getName() + " is not registered as a VARO player!");
 		}
@@ -145,9 +119,16 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	@EventHandler
+	public void onPlayerLeave(PlayerQuitEvent event) {
+
+	}
+
+	@EventHandler
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		// event.getEntity().setBanned(true);
-		// event.getEntity().kickPlayer(thanks_for_playing);
+		if (!event.getEntity().isOp()) {
+			event.getEntity().setBanned(true);
+		}
+		event.getEntity().kickPlayer(Messages.thanks_for_playing.getMSG());
 	}
 
 }
