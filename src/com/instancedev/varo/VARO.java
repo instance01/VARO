@@ -51,8 +51,32 @@ public class VARO {
 				p.setFlying(false);
 			}
 			p.setGameMode(GameMode.SURVIVAL);
+			startPlayerCountdown(p);
 		}
 		setStarted(true);
+	}
+
+	public void startPlayerCountdown(final Player p) {
+		pcounter.put(p.getName(), getDeltaTime(p));
+		ptask.put(p.getName(), Bukkit.getScheduler().runTaskTimer(m, new Runnable() {
+			public void run() {
+				String name = p.getName();
+				int secs = pcounter.get(name);
+				pcounter.put(name, secs + 1);
+				if (secs == 1170) {
+					p.sendMessage(Messages.kicking_in.getMSG().replaceAll("<count>", "30"));
+				}
+				if (secs == 1190) {
+					p.sendMessage(Messages.kicking_in.getMSG().replaceAll("<count>", "10"));
+				}
+				if (secs >= 1200) {
+					p.kickPlayer(Messages.twenty_mins.getMSG());
+					// TODO tempban
+					pcounter.remove(name);
+					ptask.get(name).cancel();
+				}
+			}
+		}, 20L, 20L));
 	}
 
 	public void stop() {
@@ -64,6 +88,7 @@ public class VARO {
 				}
 			}
 		}
+		setStarted(false);
 	}
 
 	public void setStarted(boolean b) {
@@ -90,16 +115,28 @@ public class VARO {
 	}
 
 	public void setWasTeleported(Player p, boolean b) {
-
+		m.getConfig().set("players." + p.getName() + ".was_teleported", b);
 	}
 
 	public void teleportToTeamSpawn(final Player p) {
-		final String team = m.getConfig().getString("players." + p.getName() + ".team");
-		Bukkit.getScheduler().runTaskLater(m, new Runnable() {
-			public void run() {
-				Util.teleportPlayerFixed(p, Util.getComponent(m, team));
-			}
-		}, 25L);
+		if (!wasTeleported(p)) {
+			final String team = m.getConfig().getString("players." + p.getName() + ".team");
+			Bukkit.getScheduler().runTaskLater(m, new Runnable() {
+				public void run() {
+					Util.teleportPlayerFixed(p, Util.getComponent(m, team));
+				}
+			}, 25L);
+			setWasTeleported(p, true);
+		}
+	}
+
+	public int getDeltaTime(Player p) {
+		// TODO return 0 when it's already the next day
+		return m.getConfig().isSet("players." + p.getName() + ".delta_time") ? m.getConfig().getInt("players." + p.getName() + ".delta_time") : 0;
+	}
+
+	public void setDeltaTime(Player p, int time) {
+		m.getConfig().set("players." + p.getName() + ".delta_time", time);
 	}
 
 }

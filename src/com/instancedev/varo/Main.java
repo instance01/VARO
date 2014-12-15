@@ -1,10 +1,7 @@
 package com.instancedev.varo;
 
-import java.util.HashMap;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -21,7 +18,6 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -40,14 +36,14 @@ public class Main extends JavaPlugin implements Listener {
 		this.getConfig().addDefault("config.started", false);
 		// Example:
 		this.getConfig().addDefault("players.InstanceLabs.team", "Test");
-		this.getConfig().addDefault("players.InstanceLabs.temp_time", 0);
+		this.getConfig().addDefault("players.InstanceLabs.delta_time", 0);
 		this.getConfig().addDefault("players.InstanceLabs.was_teleported", false);
 
 		this.getConfig().options().copyDefaults(true);
 		this.saveConfig();
 
 		this.started = this.getConfig().getBoolean("config.started");
-		
+
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -69,6 +65,11 @@ public class Main extends JavaPlugin implements Listener {
 					} else if (args[0].equalsIgnoreCase("stop")) {
 						v.stop();
 					}
+				} else {
+					sender.sendMessage(ChatColor.RED + "~~ VARO ~~");
+					sender.sendMessage(ChatColor.GRAY + "/varo start");
+					sender.sendMessage(ChatColor.GRAY + "/varo stop");
+					sender.sendMessage(ChatColor.GRAY + "/varo setspawn");
 				}
 			}
 		}
@@ -94,8 +95,8 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
-		if (!getConfig().isSet("players." + event.getPlayer().getName()) && !event.getPlayer().isOp()) {
-			event.disallow(Result.KICK_OTHER, "");
+		if (!v.isRegistered(event.getPlayer()) && !event.getPlayer().isOp()) {
+			event.disallow(Result.KICK_OTHER, Messages.not_registered.getMSG().replaceAll("<player>", event.getPlayer().getName()));
 		}
 	}
 
@@ -103,8 +104,11 @@ public class Main extends JavaPlugin implements Listener {
 	public void onPlayerJoinServer(final PlayerJoinEvent event) {
 		if (v.isRegistered(event.getPlayer())) {
 			v.teleportToTeamSpawn(event.getPlayer());
+			if (started) {
+				v.startPlayerCountdown(event.getPlayer());
+			}
 		} else {
-			Bukkit.broadcastMessage(event.getPlayer().getName() + " is not registered as a VARO player!");
+			Bukkit.broadcastMessage(ChatColor.GRAY + event.getPlayer().getName() + " is not registered as a VARO player!");
 		}
 	}
 
@@ -120,7 +124,9 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerLeave(PlayerQuitEvent event) {
-
+		if (v.pcounter.containsKey(event.getPlayer().getName()) && v.isRegistered(event.getPlayer())) {
+			v.setDeltaTime(event.getPlayer(), v.pcounter.get(event.getPlayer().getName()));
+		}
 	}
 
 	@EventHandler
