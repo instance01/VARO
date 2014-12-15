@@ -29,10 +29,12 @@ public class Main extends JavaPlugin implements Listener {
 
 	Main m;
 	VARO v;
+	AScoreboard ascore;
 
 	public void onEnable() {
 		m = this;
 		v = new VARO(this);
+		ascore = new AScoreboard(this);
 		Bukkit.getPluginManager().registerEvents(this, this);
 
 		this.getConfig().addDefault("config.started", false);
@@ -149,6 +151,9 @@ public class Main extends JavaPlugin implements Listener {
 	public void onPlayerLeave(PlayerQuitEvent event) {
 		if (v.pcounter.containsKey(event.getPlayer().getName()) && v.isRegistered(event.getPlayer())) {
 			v.setDeltaTime(event.getPlayer(), v.pcounter.get(event.getPlayer().getName()));
+			if (v.ptask.containsKey(event.getPlayer().getName())) {
+				v.ptask.get(event.getPlayer().getName()).cancel();
+			}
 		}
 	}
 

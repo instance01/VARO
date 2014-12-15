@@ -73,6 +73,7 @@ public class VARO {
 				String name = p.getName();
 				int secs = pcounter.get(name);
 				pcounter.put(name, secs + 1);
+				m.ascore.updateScoreboard(p);
 				if (secs == 1170) {
 					p.sendMessage(Messages.kicking_in.getMSG().replaceAll("<count>", "30"));
 				}
@@ -147,6 +148,16 @@ public class VARO {
 
 	public void setDeltaTime(Player p, int time) {
 		m.getConfig().set("players." + p.getName() + ".delta_time", time);
+	}
+
+	public String getTimeFormatted(Player p) {
+		if(pcounter.containsKey(p.getName())){
+			int secs = 1200 - pcounter.get(p.getName());
+			int minutes = secs / 60;
+			int remainder_secs = secs % 60;
+			return "" + minutes + ":" + remainder_secs;
+		}
+		return "00:00";
 	}
 
 }
