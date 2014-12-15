@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +15,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -38,6 +40,7 @@ public class Main extends JavaPlugin implements Listener {
 		this.getConfig().addDefault("players.InstanceLabs.team", "Test");
 		this.getConfig().addDefault("players.InstanceLabs.delta_time", 0);
 		this.getConfig().addDefault("players.InstanceLabs.was_teleported", false);
+		this.getConfig().addDefault("players.InstanceLabs.spawn", "0");
 
 		this.getConfig().options().copyDefaults(true);
 		this.saveConfig();
@@ -64,12 +67,25 @@ public class Main extends JavaPlugin implements Listener {
 						}
 					} else if (args[0].equalsIgnoreCase("stop")) {
 						v.stop();
+					} else if (args[0].equalsIgnoreCase("reloadconfig")) {
+						this.reloadConfig();
+					} else if (args[0].equalsIgnoreCase("registerplayer")) {
+						if (args.length > 2) {
+							String team = args[2];
+							String playername = args[1];
+							v.registerPlayer(playername, team);
+							sender.sendMessage(ChatColor.GREEN + "Successfully registered " + playername + " for team " + team + ".");
+						}
 					}
 				} else {
+					sender.sendMessage(" ");
 					sender.sendMessage(ChatColor.RED + "~~ VARO ~~");
 					sender.sendMessage(ChatColor.GRAY + "/varo start");
 					sender.sendMessage(ChatColor.GRAY + "/varo stop");
-					sender.sendMessage(ChatColor.GRAY + "/varo setspawn");
+					sender.sendMessage(ChatColor.GRAY + "/varo reloadconfig");
+					sender.sendMessage(ChatColor.GRAY + "/varo setspawn <team>");
+					sender.sendMessage(ChatColor.GRAY + "/varo registerplayer <player> <team>");
+					sender.sendMessage(ChatColor.DARK_GRAY + "For each new player you have to register and set the spawn for his team.");
 				}
 			}
 		}
@@ -90,6 +106,13 @@ public class Main extends JavaPlugin implements Listener {
 				event.setCancelled(true);
 				((Player) event.getWhoClicked()).sendMessage(Messages.golden_apple_blocked.getMSG());
 			}
+		}
+	}
+
+	@EventHandler
+	public void onPlayerKick(PlayerKickEvent event) {
+		if (event.getReason().toLowerCase().contains("ban")) {
+			event.setReason(Messages.thanks_for_playing.getMSG());
 		}
 	}
 
@@ -133,6 +156,12 @@ public class Main extends JavaPlugin implements Listener {
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		if (!event.getEntity().isOp()) {
 			event.getEntity().setBanned(true);
+		}
+		Entity e = event.getEntity().getKiller();
+		if (e instanceof Player) {
+			Player killer = (Player) e;
+			getConfig().set("kills." + killer.getName() + "." + System.currentTimeMillis(), event.getEntity().getName());
+			saveConfig();
 		}
 		event.getEntity().kickPlayer(Messages.thanks_for_playing.getMSG());
 	}

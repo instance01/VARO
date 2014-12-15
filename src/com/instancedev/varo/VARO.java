@@ -20,6 +20,16 @@ public class VARO {
 		this.m = m;
 	}
 
+	public void registerPlayer(String playername, String team) {
+		String base = "players." + playername;
+		m.getConfig().set(base + ".team", team);
+		m.getConfig().set(base + ".delta_time", 0);
+		m.getConfig().set(base + ".was_teleported", false);
+		m.getConfig().set(base + ".spawn", m.getConfig().isSet("teams." + team) ? "1" : "0");
+		m.getConfig().set("teams." + team, team);
+		m.saveConfig();
+	}
+
 	public void startCountdown() {
 		task_temp = Bukkit.getScheduler().runTaskTimer(m, new Runnable() {
 			public void run() {
@@ -123,7 +133,7 @@ public class VARO {
 			final String team = m.getConfig().getString("players." + p.getName() + ".team");
 			Bukkit.getScheduler().runTaskLater(m, new Runnable() {
 				public void run() {
-					Util.teleportPlayerFixed(p, Util.getComponent(m, team));
+					Util.teleportPlayerFixed(p, Util.getComponent(m, team + ".0"));
 				}
 			}, 25L);
 			setWasTeleported(p, true);
