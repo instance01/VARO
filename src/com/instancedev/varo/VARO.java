@@ -82,10 +82,11 @@ public class VARO {
 				}
 				if (secs >= 1200) {
 					p.kickPlayer(Messages.twenty_mins.getMSG());
-					if(!m.getConfig().isSet("players." + p.getName() + ".temp_do_ban")){
+					if (!m.getConfig().isSet("players." + p.getName() + ".temp_do_ban")) {
 						m.getConfig().set("players." + p.getName() + ".temp_do_ban", true);
 					} else {
 						m.getConfig().set("players." + p.getName() + ".temp_banned", Util.millisUntilMidnight());
+						m.getConfig().set("players." + p.getName() + ".temp_do_ban", null);
 					}
 					m.saveConfig();
 					pcounter.remove(name);
@@ -147,8 +148,12 @@ public class VARO {
 	}
 
 	public int getDeltaTime(Player p) {
-		// TODO return 0 when it's already the next day
-		return m.getConfig().isSet("players." + p.getName() + ".delta_time") ? m.getConfig().getInt("players." + p.getName() + ".delta_time") : 0;
+		if (m.getConfig().isSet("players." + p.getName() + ".delta_time")) {
+			int ret = m.getConfig().getInt("players." + p.getName() + ".delta_time");
+			m.getConfig().set("players." + p.getName() + ".delta_time", null);
+			return ret;
+		}
+		return 0;
 	}
 
 	public void setDeltaTime(Player p, int time) {
@@ -156,7 +161,7 @@ public class VARO {
 	}
 
 	public String getTimeFormatted(Player p) {
-		if(pcounter.containsKey(p.getName())){
+		if (pcounter.containsKey(p.getName())) {
 			int secs = 1200 - pcounter.get(p.getName());
 			int minutes = secs / 60;
 			int remainder_secs = secs % 60;
