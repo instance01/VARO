@@ -81,7 +81,6 @@ public class VARO {
 					p.sendMessage(Messages.kicking_in.getMSG().replaceAll("<count>", "10"));
 				}
 				if (secs >= 1200) {
-					p.kickPlayer(Messages.twenty_mins.getMSG());
 					if (!m.getConfig().isSet("players." + p.getName() + ".temp_do_ban")) {
 						m.getConfig().set("players." + p.getName() + ".temp_do_ban", true);
 					} else {
@@ -91,6 +90,7 @@ public class VARO {
 					m.saveConfig();
 					pcounter.remove(name);
 					ptask.get(name).cancel();
+					p.kickPlayer(Messages.twenty_mins.getMSG());
 				}
 			}
 		}, 20L, 20L));
@@ -140,17 +140,38 @@ public class VARO {
 			final String team = m.getConfig().getString("players." + p.getName() + ".team");
 			Bukkit.getScheduler().runTaskLater(m, new Runnable() {
 				public void run() {
-					Util.teleportPlayerFixed(p, Util.getComponent(m, team + ".0"));
+					Util.teleportPlayerFixed(p, Util.getComponent(m, team + (isPlayerOnlineFromSameTeam(p) ? ".1" : ".0")));
 				}
 			}, 25L);
 			setWasTeleported(p, true);
 		}
 	}
 
+	public boolean isPlayerOnlineFromSameTeam(Player p) {
+		final String team = m.getConfig().getString("players." + p.getName() + ".team");
+		for (Player pp : Bukkit.getOnlinePlayers()) {
+			final String t = m.getConfig().getString("players." + p.getName() + ".team");
+			if (t.equalsIgnoreCase(team)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean sameTeam(Player p1, Player p2){
+		final String team = m.getConfig().getString("players." + p1.getName() + ".team");
+		final String team_ = m.getConfig().getString("players." + p2.getName() + ".team");
+		if (team_.equalsIgnoreCase(team)) {
+			return true;
+		}
+		return false;
+	}
+
 	public int getDeltaTime(Player p) {
 		if (m.getConfig().isSet("players." + p.getName() + ".delta_time")) {
 			int ret = m.getConfig().getInt("players." + p.getName() + ".delta_time");
 			m.getConfig().set("players." + p.getName() + ".delta_time", null);
+			m.saveConfig();
 			return ret;
 		}
 		return 0;
@@ -158,6 +179,7 @@ public class VARO {
 
 	public void setDeltaTime(Player p, int time) {
 		m.getConfig().set("players." + p.getName() + ".delta_time", time);
+		m.saveConfig();
 	}
 
 	public String getTimeFormatted(Player p) {

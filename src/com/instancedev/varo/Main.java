@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -130,7 +131,7 @@ public class Main extends JavaPlugin implements Listener {
 				long millis = m.getConfig().getLong("players." + event.getPlayer().getName() + ".temp_banned");
 				long delta = Util.millisBetween(millis);
 				System.out.println(delta);
-				if(delta > 0){
+				if (delta > 0) {
 					event.disallow(Result.KICK_OTHER, Messages.quota_drained.getMSG());
 				}
 			}
@@ -153,6 +154,16 @@ public class Main extends JavaPlugin implements Listener {
 	public void onEntityDamage(EntityDamageEvent event) {
 		if (event.getEntity() instanceof Player) {
 			Player p = (Player) event.getEntity();
+			if (event instanceof EntityDamageByEntityEvent) {
+				EntityDamageByEntityEvent ev = (EntityDamageByEntityEvent) event;
+				if (ev.getDamager() instanceof Player) {
+					Player damager = (Player) ev.getDamager();
+					if (v.sameTeam(p, damager)) {
+						event.setCancelled(true);
+						return;
+					}
+				}
+			}
 			if (event.getDamage() > 0.5D && !event.isCancelled()) {
 				Util.playBloodEffect(p);
 			}
@@ -161,7 +172,9 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerLeave(PlayerQuitEvent event) {
+		System.out.println(v.pcounter.containsKey(event.getPlayer().getName()));
 		if (v.pcounter.containsKey(event.getPlayer().getName()) && v.isRegistered(event.getPlayer())) {
+			System.out.println(v.pcounter.get(event.getPlayer().getName()));
 			v.setDeltaTime(event.getPlayer(), v.pcounter.get(event.getPlayer().getName()));
 			if (v.ptask.containsKey(event.getPlayer().getName())) {
 				v.ptask.get(event.getPlayer().getName()).cancel();
